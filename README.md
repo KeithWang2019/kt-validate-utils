@@ -166,6 +166,14 @@ public class ValidateDemo {
 | `@KtValidateNotEmpty` | 非空校验 | message：失败提示信息（支持 String、引用类型、集合 / 数组非空） |
 | `@KtValidateStringBound` | 字符串长度校验 | minLength（默认 0）、maxLength（默认 50）、message：失败提示信息 |
 | `@KtValidateCustom` | 自定义校验 | handleBy：指定自定义处理器类、message：失败提示信息 |
+| `@KtValidateAfterDate` | 日期先后校验 | propertyName：指定开始时间字段、message：失败提示信息 |
+| `@KtValidateArrayBound` | 数组范围校验 | maxCount：指定最大数量、minCount：指定最小数量、message：失败提示信息 |
+| `@KtValidateFloatBound` | 浮点数范围校验 | max：指定最大数值、min：指定最小数值、message：失败提示信息 |
+| `@KtValidateIntegerBound` | 整数范围校验 | max：指定最大数值、min：指定最小数值、message：失败提示信息 |
+| `@KtValidateListBound` | 列表范围校验 | maxCount：指定最大数量、minCount：指定最小数量、message：失败提示信息 |
+| `@KtValidateMapBound` | Map范围校验 | maxCount：Map 最大键值对个数、minCount：Map 最小键值对个数、message：失败提示信息 |
+| `@KtValidateOptions` | 可选项范围校验 | options：允许的取值数组（如 `{"男","女"}`）、message：失败提示信息 |
+| `@KtValidateRegex` | 正则表达式校验 | regex：校验用正则表达式（如手机号 `^1[3-9]\\d{9}$`）、message：失败提示信息 |
 
 ### 2. 核心工具类 `KtValidateUtils`
 对外提供统一校验入口（无状态，无需实例化）：
@@ -295,7 +303,54 @@ public class UserDTO {
     // Getter + Setter
 }
 ```
-## 六、同类工具对比
+## 六、一个属性多个注解的执行顺序
+按注解在字段上的「声明顺序」执行，框架在校验时，会按字段上注解的书写顺序依次触发对应的处理器，执行校验逻辑，具体规则如下：
+### 1. 执行顺序规则
+- **基础规则**：注解声明在前，先执行；声明在后，后执行。
+- **中断机制**：若某一个注解校验失败（返回非空 `KtValidateResult`），框架会立即终止后续所有注解的校验，直接返回当前失败结果（快速失败策略）。
+- **数据修正影响**：若前序注解的处理器通过 `setOneself()` 修改了字段值，后续注解的校验会基于修正后的值执行（因字段值已被实时更新）。
+### 2. 执行顺序规则
+场景：字段同时添加「非空校验」→「字符串长度校验」→「正则校验」，按声明顺序执行
+```java
+public class UserDTO {
+    // 注解执行顺序：@KtValidateNotEmpty → @KtValidateStringBound → @KtValidateRegex
+    @KtValidateNotEmpty(message = "手机号不能为空")
+    @KtValidateStringBound(minLength = 11, maxLength = 11, message = "手机号必须为11位")
+    @KtValidateRegex(regex = "^1[3-9]\\d{9}$", message = "手机号格式错误")
+    private String phone;
+
+    // Getter + Setter
+}
+```
+执行流程分析：
+1. 先执行 `@KtValidateNotEmpty`：若 phone 为 null，直接返回 “手机号不能为空”，后续两个注解不执行。
+2. 若非空，执行 `@KtValidateStringBound`：校验长度是否为 11 位，若不是，返回 “手机号必须为 11 位”，最后一个注解不执行。
+3. 若长度合法，执行 `@KtValidateRegex`：校验格式是否符合手机号规则，失败则返回 “手机号格式错误”，全部执行完毕。
+4. 若所有注解校验通过，返回成功（无错误结果）。
+### 3. 特殊场景：含数据修正的注解执行顺序
+若前序注解包含 setOneself() 数据修正，后续注解会基于修正后的值校验：
+```java
+public class UserDTO {
+    // 执行顺序：@KtValidateTrim（去空格修正）→ @KtValidateStringBound（基于去空格后的值校验长度）
+    @KtValidateTrim(message = "") // 自定义注解：去空格修正
+    @KtValidateStringBound(minLength = 2, maxLength = 20, message = "用户名长度必须在2-20之间")
+    private String username;
+}
+
+// 自定义去空格处理器
+public class TrimValidator extends KtValidator<KtValidateTrim, String> {
+    @Override
+    public KtValidateResult<?> call(String val, KtValidateTrim annotation) {
+        if (val != null) {
+            setOneself(val.trim()); // 修正字段值（去空格）
+        }
+        return null;
+    }
+}
+```
+效果：若 `username` 原始值为 " 张三 "，先通过 `@KtValidateTrim` 修正为 "张三"，再执行 `@KtValidateStringBound` 校验长度（基于 2 位长度，校验通过）。
+
+## 七、同类工具对比
 | 对比维度 | KtValidateUtils | Hibernate Validator（JSR-380） | Spring Validation（基于 Hibernate） | Apache Commons Validator |
 |----------|----------|--------|--------|--------|
 | 核心定位 | 轻量级嵌套校验，支持数据修正与层级关联 | 工业级标准校验框架，JSR-380 实现 | 整合 Hibernate，适配 Spring 生态 | 纯 API 调用的校验工具类（无注解） |
