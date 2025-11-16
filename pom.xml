@@ -1,0 +1,186 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.cangsg.brick</groupId>
+  <artifactId>kt-validate-utils</artifactId>
+  <packaging>jar</packaging>
+  <version>1.0.0</version>
+  <name>kt-validate-utils</name>
+  <description>积木组件的一部分，通用工具类校验对象的属性值是否合理，支持 Java 8+</description>
+  <url>https://github.com/KeithWang2019</url>
+
+  <!-- 1. 开发者信息（必填） -->
+  <developers>
+    <developer>
+      <id>KeithWang</id>
+      <name>藏书君</name>
+      <email>gg_happy@163.com</email>
+      <url>https://github.com/KeithWang2019</url>
+      <roles>
+        <role>developer</role>
+      </roles>
+      <timezone>+8</timezone>
+    </developer>
+  </developers>
+
+  <organization>
+    <name>藏书君</name>
+    <url>https://github.com/KeithWang2019</url>
+  </organization>
+
+  <!-- 新增 SCM 配置（核心解决报错） -->
+  <scm>
+    <!-- 项目的公开访问地址（如 GitHub 仓库页面） -->
+    <url>https://github.com/KeithWang2019/kt-validate-utils.git</url>
+    <!-- 只读连接（供他人拉取代码，scm:协议 + 仓库地址） -->
+    <connection>scm:git:https://github.com/KeithWang2019/kt-properties-utils.git</connection>
+    <!-- 开发者可写连接（通常是 SSH 地址，供你推送代码） -->
+    <developerConnection>scm:git:git@github.com:KeithWang2019/kt-validate-utils.git</developerConnection>
+    <!-- 当前标签（默认 HEAD，release 插件会自动替换为发布标签） -->
+    <tag>kt-validate-utils-1.0.3</tag>
+  </scm>
+
+  <licenses>
+    <license>
+      <name>MIT License</name> <!-- 许可证名称 -->
+      <url>https://github.com/KeithWang2019/kt-validate-utils/blob/master/LICENSE</url>
+      <distribution>repo</distribution>
+      <comments />
+    </license>
+  </licenses>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <java.version>8</java.version>
+    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.target>8</maven.compiler.target>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <optional>true</optional>
+      <version>1.18.38</version>
+    </dependency>
+    <dependency>
+      <groupId>com.cangsg.brick</groupId> 
+      <artifactId>kt-base-utils</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>5.13.4</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>5.13.4</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest</artifactId>
+      <version>3.0</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.14.1</version>
+        <configuration>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>1.18.38</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+      <!-- 5.1 GPG 签名插件（中央仓库强制） -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <version>3.2.8</version>
+        <executions>
+          <execution>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- 5.2 源码插件（中央仓库强制，需提供源码包） -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.3.1</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- 5.3 文档插件（中央仓库强制，需提供 Javadoc 包） -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.11.3</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <!-- 忽略 Javadoc 警告（可选） -->
+            <configuration>
+              <additionalJOptions>
+                <additionalJOption>-Xdoclint:none</additionalJOption>
+              </additionalJOptions>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.sonatype.central</groupId>
+        <artifactId>central-publishing-maven-plugin</artifactId>
+        <version>0.9.0</version>
+        <extensions>true</extensions>
+        <configuration>
+          <publishingServerId>ossrh</publishingServerId>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <!-- 核心：添加部署仓库配置 -->
+  <distributionManagement>
+    <!-- 正式版本仓库（Sonatype OSSRH 临时仓库，用于 Staging） -->
+    <repository>
+      <id>ossrh</id> <!-- 必须与 settings.xml 中 server.id 一致 -->
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+    <!-- 快照版本仓库（可选，用于测试版本部署） -->
+    <snapshotRepository>
+      <id>ossrh</id> <!-- 与正式仓库 ID 一致 -->
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+    </snapshotRepository>
+  </distributionManagement>
+</project>
